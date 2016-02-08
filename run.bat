@@ -1,2 +1,2 @@
 @echo off
-java FindImageInImage test_image.png test_image_sub.png
+java FindImageInImage test_image_sub.png test_image.png
