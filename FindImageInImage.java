@@ -1,7 +1,7 @@
 
 public class FindImageInImage {
-    static int versionMajor = 0;
-    static int versionMinor = 1;
+    static final int versionMajor = 0;
+    static final int versionMinor = 1;
 
     public static void main( String[] args ) {
         if ( args.length == 0 ) {
