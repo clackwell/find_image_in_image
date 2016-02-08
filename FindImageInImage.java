@@ -16,6 +16,7 @@ public class FindImageInImage {
                 printUsage();
                 System.exit( 0 );
             }
+            argIndex++;
         }
     }
 
