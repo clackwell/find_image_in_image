@@ -25,7 +25,10 @@ public class FindImageInImage {
                 filename1 = arg;
             } else if ( filename2 == null ) {
                 filename2 = arg;
-            }
+            } else {
+                println( "ERROR: Invalid argument: " + arg );
+                printUsage();
+                System.exit( EXIT_CODE_INVALID_ARGUMENTS );
             }
             argIndex++;
         }
