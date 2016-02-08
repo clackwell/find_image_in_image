@@ -13,6 +13,8 @@ public class FindImageInImage {
     static final int EXIT_CODE_IMAGE_NOT_FOUND = 1;
     static final int EXIT_CODE_INVALID_ARGUMENTS = 2;
     static final int EXIT_CODE_CANNOT_READ_IMAGE = 3;
+    static final int EXIT_CODE_SUB_IMAGE_WIDTH_TOO_LARGE = 4;
+    static final int EXIT_CODE_SUB_IMAGE_HEIGHT_TOO_LARGE = 5;
 
     public static void main( String[] args ) throws Exception {
         if ( args.length == 0 ) {
@@ -61,6 +63,75 @@ public class FindImageInImage {
                 System.exit( EXIT_CODE_CANNOT_READ_IMAGE );
             }
         }
+
+        int width = img.getWidth();
+        int subWidth = subImage.getWidth();
+        if ( subWidth > width ) {
+            println( "ERROR: Sub image width is larger than image width." );
+            System.exit( EXIT_CODE_SUB_IMAGE_WIDTH_TOO_LARGE );
+        }
+
+        int height = img.getHeight();
+        int subHeight = subImage.getHeight();
+        if ( subHeight > height ) {
+            println( "ERROR: Sub image height is larger than image height." );
+            System.exit( EXIT_CODE_SUB_IMAGE_HEIGHT_TOO_LARGE );
+        }
+
+        if ( findSubImage( subImage, subWidth, subHeight, img, width, height ) ) {
+            System.exit( EXIT_CODE_IMAGE_FOUND );
+        }
+
+        System.exit( EXIT_CODE_IMAGE_NOT_FOUND );
+    }
+
+    static boolean findSubImage( BufferedImage subImage, int subWidth, int subHeight, BufferedImage img, int width, int height ) {
+        long startMillis = System.currentTimeMillis();
+        int xOffsetMax = width - subWidth;
+        for ( int xOffset = 0; xOffset <= xOffsetMax; xOffset++ ) {
+            int yOffsetMax = height - subHeight;
+            for ( int yOffset = 0; yOffset <= yOffsetMax; yOffset++ ) {
+                if ( subImageIsAtOffset( subImage, img, xOffset, yOffset ) ) {
+                    println( "FOUND=YES" );
+                    println( "FOUND_AT_X=" + xOffset );
+                    println( "FOUND_AT_Y=" + yOffset );
+                    println( "RUN_TIME=" + ( System.currentTimeMillis() - startMillis ) );
+                    println();
+                    return true;
+                }
+            }
+        }
+        println( "FOUND=NO" );
+        println( "RUN_TIME=" + ( System.currentTimeMillis() - startMillis ) );
+        return false;
+    }
+
+    static boolean subImageIsAtOffset( BufferedImage subImage, BufferedImage img, int xOffset, int yOffset ) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+        int subWidth = subImage.getWidth();
+        int subHeight = subImage.getHeight();
+
+        for ( int subImageX = 0; subImageX < subWidth; subImageX++ ) {
+            if ( xOffset + subImageX >= width ) {
+                println( "Should not occur-1" );
+                return false;
+            }
+            for ( int subImageY = 0; subImageY < subHeight; subImageY++ ) {
+                if ( yOffset + subImageY >= height ) {
+                    println( "Should not occur-2" );
+                    return false;
+                }
+                int subImagePixel = subImage.getRGB( subImageX, subImageY );
+                int x = xOffset + subImageX;
+                int y = yOffset + subImageY;
+                int imgPixel = img.getRGB( x, y );
+                if ( subImagePixel != imgPixel ) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     static void exitWithMessage( String message, boolean printUsage, int exitCode ) {
@@ -74,16 +145,16 @@ public class FindImageInImage {
     static void printUsage() {
         println( "USAGE:" );
         println();
-        println( " FindImageInImage [--help] [image_to_find [image_to_search_in]]" );
+        println( " FindImageInImage [--help] [sub_image [image]]" );
         println();
         println( " Search for image in another image or the screen." );
         println();
         println("PARAMETERS:");
         println();
-        println(" image_to_find");
+        println(" sub_image");
         println("   File name of image to search for");
         println();
-        println(" image_to_search_in");
+        println(" image");
         println("   File name of image to search in.");
         println("   Searches on screen if not specified.");
         println();
