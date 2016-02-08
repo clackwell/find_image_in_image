@@ -1,3 +1,9 @@
+import java.awt.image.BufferedImage;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.io.File;
+import javax.imageio.ImageIO;
 
 public class FindImageInImage {
     static final int versionMajor = 0;
@@ -6,8 +12,9 @@ public class FindImageInImage {
     static final int EXIT_CODE_IMAGE_FOUND = 0;
     static final int EXIT_CODE_IMAGE_NOT_FOUND = 1;
     static final int EXIT_CODE_INVALID_ARGUMENTS = 2;
+    static final int EXIT_CODE_CANNOT_READ_IMAGE = 3;
 
-    public static void main( String[] args ) {
+    public static void main( String[] args ) throws Exception {
         if ( args.length == 0 ) {
             printUsage();
             System.exit( 0 );
@@ -31,6 +38,28 @@ public class FindImageInImage {
                 System.exit( EXIT_CODE_INVALID_ARGUMENTS );
             }
             argIndex++;
+        }
+
+        BufferedImage subImage = null;
+        try {
+            subImage = ImageIO.read( new File( filename1 ) );
+        } catch ( Exception e ) {
+            println( "ERROR: Cannot read file: " + filename1 );
+            printUsage();
+            System.exit( EXIT_CODE_CANNOT_READ_IMAGE );
+        }
+
+        BufferedImage img = null;
+        if ( filename2 == null ) {
+            img = new Robot().createScreenCapture( new Rectangle( Toolkit.getDefaultToolkit().getScreenSize() ) );
+        } else {
+            try {
+                img = ImageIO.read( new File( filename2 ) );
+            } catch ( Exception e ) {
+                println( "ERROR: Cannot read file: " + filename2 );
+                printUsage();
+                System.exit( EXIT_CODE_CANNOT_READ_IMAGE );
+            }
         }
     }
 
