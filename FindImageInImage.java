@@ -3,6 +3,10 @@ public class FindImageInImage {
     static final int versionMajor = 0;
     static final int versionMinor = 1;
 
+    static final int EXIT_CODE_IMAGE_FOUND = 0
+    static final int EXIT_CODE_IMAGE_NOT_FOUND = 1
+    static final int EXIT_CODE_INVALID_ARGUMENTS = 2
+
     public static void main( String[] args ) {
         if ( args.length == 0 ) {
             printUsage();
