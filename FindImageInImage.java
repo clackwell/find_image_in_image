@@ -24,93 +24,140 @@ public class FindImageInImage {
 
         String filename1 = null;
         String filename2 = null;
+        int allowedPixelColorDifference = 0;
+        double allowedPixelFailsPercent = 0.0;
         int argIndex = 0;
         while ( argIndex < args.length ) {
             String arg = args[ argIndex ];
             if ( arg.equals( "--help" ) ) {
                 printUsage();
                 System.exit( 0 );
+            } else if ( arg.equals( "--allowed-pixel-color-difference" ) ) {
+                if ( argIndex == args.length -1 ) {
+                    println( "ERROR: Missing value for parameter: " + arg );
+                    System.exit( EXIT_CODE_INVALID_ARGUMENTS );
+                }
+                try {
+                    argIndex++;
+                    allowedPixelColorDifference = Integer.parseInt( args[ argIndex ] );
+                } catch ( Exception e ) {
+                    println( "ERROR: Invalid value for parameter: " + arg );
+                    println();
+                    printUsage();
+                    System.exit( EXIT_CODE_INVALID_ARGUMENTS );
+                }
+            } else if ( arg.equals( "--allowed-pixel-fails-percent" ) ) {
+                if ( argIndex == args.length -1 ) {
+                    println( "ERROR: Missing value for parameter: " + arg );
+                    System.exit( EXIT_CODE_INVALID_ARGUMENTS );
+                }
+                try {
+                    argIndex++;
+                    allowedPixelFailsPercent = Double.parseDouble( args[ argIndex ] );
+                } catch ( Exception e ) {
+                    println( "ERROR: Invalid value for parameter: " + arg );
+                    printUsage();
+                    System.exit( EXIT_CODE_INVALID_ARGUMENTS);
+                }
             } else if ( filename1 == null ) {
                 filename1 = arg;
             } else if ( filename2 == null ) {
                 filename2 = arg;
             } else {
                 println( "ERROR: Invalid argument: " + arg );
+                println();
                 printUsage();
                 System.exit( EXIT_CODE_INVALID_ARGUMENTS );
             }
             argIndex++;
         }
 
-        BufferedImage subImage = null;
-        try {
-            subImage = ImageIO.read( new File( filename1 ) );
-        } catch ( Exception e ) {
-            println( "ERROR: Cannot read file: " + filename1 );
-            printUsage();
-            System.exit( EXIT_CODE_CANNOT_READ_IMAGE );
-        }
-
+        BufferedImage subImage = readImage( filename1 );
         BufferedImage img = null;
         if ( filename2 == null ) {
             img = new Robot().createScreenCapture( new Rectangle( Toolkit.getDefaultToolkit().getScreenSize() ) );
         } else {
-            try {
-                img = ImageIO.read( new File( filename2 ) );
-            } catch ( Exception e ) {
-                println( "ERROR: Cannot read file: " + filename2 );
-                printUsage();
-                System.exit( EXIT_CODE_CANNOT_READ_IMAGE );
-            }
+            img = readImage( filename2 );
         }
 
         int width = img.getWidth();
         int subWidth = subImage.getWidth();
+        int height = img.getHeight();
+        int subHeight = subImage.getHeight();
+
         if ( subWidth > width ) {
             println( "ERROR: Sub image width is larger than image width." );
             System.exit( EXIT_CODE_SUB_IMAGE_WIDTH_TOO_LARGE );
-        }
-
-        int height = img.getHeight();
-        int subHeight = subImage.getHeight();
-        if ( subHeight > height ) {
+        } else if ( subHeight > height ) {
             println( "ERROR: Sub image height is larger than image height." );
             System.exit( EXIT_CODE_SUB_IMAGE_HEIGHT_TOO_LARGE );
         }
 
-        if ( findSubImage( subImage, subWidth, subHeight, img, width, height ) ) {
+        if ( findSubImage(
+                subImage,
+                subWidth,
+                subHeight,
+                img,
+                width,
+                height,
+                allowedPixelFailsPercent,
+                allowedPixelColorDifference ) ) {
             System.exit( EXIT_CODE_IMAGE_FOUND );
         }
 
         System.exit( EXIT_CODE_IMAGE_NOT_FOUND );
     }
 
-    static boolean findSubImage( BufferedImage subImage, int subWidth, int subHeight, BufferedImage img, int width, int height ) {
+    static boolean findSubImage(
+            BufferedImage subImage,
+            int subWidth,
+            int subHeight,
+            BufferedImage img,
+            int width,
+            int height,
+            double allowedPixelFailsPercent,
+            int allowedPixelColorDifference ) {
+        println( "SUB_IMAGE_TOTAL_PIXELS=" + subWidth * subHeight );
+        println( "IMAGE_TOTAL_PIXELS=" + width * height );
+        int allowedPixelFailsCount = (int)( ( (double)( subWidth * subHeight) / 100.0 ) * allowedPixelFailsPercent );
+        println( "ALLOWED_PIXEL_FAILS_COUNT=" + allowedPixelFailsCount );
         long startMillis = System.currentTimeMillis();
         int xOffsetMax = width - subWidth;
         for ( int xOffset = 0; xOffset <= xOffsetMax; xOffset++ ) {
             int yOffsetMax = height - subHeight;
             for ( int yOffset = 0; yOffset <= yOffsetMax; yOffset++ ) {
-                if ( subImageIsAtOffset( subImage, img, xOffset, yOffset ) ) {
+                if ( subImageIsAtOffset(
+                        subImage,
+                        img,
+                        xOffset,
+                        yOffset,
+                        allowedPixelFailsCount,
+                        allowedPixelColorDifference ) ) {
                     println( "FOUND=YES" );
                     println( "FOUND_AT_X=" + xOffset );
                     println( "FOUND_AT_Y=" + yOffset );
-                    println( "RUN_TIME=" + ( System.currentTimeMillis() - startMillis ) );
-                    println();
+                    println( "RUN_TIME_MILLIS=" + ( System.currentTimeMillis() - startMillis ) );
                     return true;
                 }
             }
         }
         println( "FOUND=NO" );
-        println( "RUN_TIME=" + ( System.currentTimeMillis() - startMillis ) );
+        println( "RUN_TIME_MILLIS=" + ( System.currentTimeMillis() - startMillis ) );
         return false;
     }
 
-    static boolean subImageIsAtOffset( BufferedImage subImage, BufferedImage img, int xOffset, int yOffset ) {
+    static boolean subImageIsAtOffset(
+            BufferedImage subImage,
+            BufferedImage img,
+            int xOffset,
+            int yOffset,
+            int allowedPixelFailsCount,
+            int allowedPixelColorDifference ) {
         int width = img.getWidth();
         int height = img.getHeight();
         int subWidth = subImage.getWidth();
         int subHeight = subImage.getHeight();
+        int actualPixelFailsCount = 0;
 
         for ( int subImageX = 0; subImageX < subWidth; subImageX++ ) {
             if ( xOffset + subImageX >= width ) {
@@ -123,14 +170,30 @@ public class FindImageInImage {
                     return false;
                 }
                 int subImagePixel = subImage.getRGB( subImageX, subImageY );
+                int r = ( subImagePixel >> 0 ) & 0x000000ff;
+                int g = ( subImagePixel >> 1 ) & 0x000000ff;
+                int b = ( subImagePixel >> 2 ) & 0x000000ff;
+                int v1 = r + g + b;
+
                 int x = xOffset + subImageX;
                 int y = yOffset + subImageY;
                 int imgPixel = img.getRGB( x, y );
-                if ( subImagePixel != imgPixel ) {
-                    return false;
+                r = ( imgPixel >> 0 ) & 0x000000ff;
+                g = ( imgPixel >> 1 ) & 0x000000ff;
+                b = ( imgPixel >> 2 ) & 0x000000ff;
+                int v2 = r + g + b;
+                int colorDifference = Math.abs( v1 - v2 );
+                if ( colorDifference > allowedPixelColorDifference ) {
+                    actualPixelFailsCount++;
+                    if ( actualPixelFailsCount > allowedPixelFailsCount ) {
+                        return false;
+                    }
                 }
             }
         }
+        println( "FAILED_PIXEL_COUNT=" + actualPixelFailsCount );
+        double p = actualPixelFailsCount / ( (double)subWidth * (double)subHeight / 100.0 );
+        println( "FAILED_PIXEL_PERCENT=" + p );
         return true;
     }
 
@@ -145,7 +208,8 @@ public class FindImageInImage {
     static void printUsage() {
         println( "USAGE:" );
         println();
-        println( " FindImageInImage [--help] [sub_image [image]]" );
+        println( " FindImageInImage [options] sub_image [image]" );
+        println( " FindImageInImage --help" );
         println();
         println( " Search for image in another image or the screen." );
         println();
@@ -161,12 +225,34 @@ public class FindImageInImage {
         println(" --help");
         println("   This information");
         println();
+        println("OPTIONS:");
+        println();
+        println("  --allowed-pixel-color-difference");
+        println("    Allowed pixel color difference.");
+        println("    An integer value.");
+        println();
+        println("  --allowed-pixel-fails-percent");
+        println("    Allowed percentage of pixel color mismatches.");
+        println("    An integer or floating point value.");
+        println();
         println( "EXIT CODES:" );
         println();
         println( " 0 : Sub-image has been found" );
         println( " 1 : Sub-image has not been found" );
         println( " 2 : Error in parameters" );
         println();
+    }
+
+    static BufferedImage readImage( String filename ) {
+        try {
+            return ImageIO.read( new File( filename ) );
+        } catch ( Exception e ) {
+            println( "ERROR: Cannot read file: " + filename );
+            println();
+            printUsage();
+            System.exit( EXIT_CODE_CANNOT_READ_IMAGE );
+        }
+        return null;
     }
 
     static void printVersion() {
