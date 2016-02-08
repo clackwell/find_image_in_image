@@ -11,7 +11,7 @@ public class FindImageInImage {
 
         int argIndex = 0;
         while ( argIndex < args.length ) {
-            String arg = args[argIndex];
+            String arg = args[ argIndex ];
             if ( arg.equals( "--help" ) ) {
                 printUsage();
                 System.exit( 0 );
