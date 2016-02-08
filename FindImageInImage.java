@@ -13,12 +13,19 @@ public class FindImageInImage {
             System.exit( 0 );
         }
 
+        String filename1 = null;
+        String filename2 = null;
         int argIndex = 0;
         while ( argIndex < args.length ) {
             String arg = args[ argIndex ];
             if ( arg.equals( "--help" ) ) {
                 printUsage();
                 System.exit( 0 );
+            } else if ( filename1 == null ) {
+                filename1 = arg;
+            } else if ( filename2 == null ) {
+                filename2 = arg;
+            }
             }
             argIndex++;
         }
