@@ -227,7 +227,7 @@ public class FindImageInImage {
         println("   Searches on screen if not specified.");
         println();
         println(" --help");
-        println("   This information");
+        println("   Output this information");
         println();
         println(" --version");
         println("   Output version number");
