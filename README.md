@@ -9,6 +9,7 @@ Intended use is for GUI automation.
     
      FindImageInImage [options] sub_image [image]
      FindImageInImage --help
+     FindImageInImage --version
     
      Search for image in another image or the screen.
     
@@ -22,7 +23,10 @@ Intended use is for GUI automation.
        Searches on screen if not specified.
     
      --help
-       This information
+       Output this information
+    
+     --version
+       Output version number
     
     OPTIONS:
     
