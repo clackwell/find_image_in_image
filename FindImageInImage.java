@@ -6,8 +6,8 @@ import java.io.File;
 import javax.imageio.ImageIO;
 
 public class FindImageInImage {
-    static final int versionMajor = 0;
-    static final int versionMinor = 1;
+    static final int versionMajor = 1;
+    static final int versionMinor = 0;
 
     static final int EXIT_CODE_IMAGE_FOUND = 0;
     static final int EXIT_CODE_IMAGE_NOT_FOUND = 1;
