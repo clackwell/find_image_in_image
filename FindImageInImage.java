@@ -32,6 +32,9 @@ public class FindImageInImage {
             if ( arg.equals( "--help" ) ) {
                 printUsage();
                 System.exit( 0 );
+            } else if ( arg.equals( "--version" ) ) {
+                printVersion();
+                System.exit( 0 );
             } else if ( arg.equals( "--allowed-pixel-color-difference" ) ) {
                 if ( argIndex == args.length -1 ) {
                     println( "ERROR: Missing value for parameter: " + arg );
@@ -210,6 +213,7 @@ public class FindImageInImage {
         println();
         println( " FindImageInImage [options] sub_image [image]" );
         println( " FindImageInImage --help" );
+        println( " FindImageInImage --version" );
         println();
         println( " Search for image in another image or the screen." );
         println();
@@ -224,6 +228,9 @@ public class FindImageInImage {
         println();
         println(" --help");
         println("   This information");
+        println();
+        println(" --version");
+        println("   Output version number");
         println();
         println("OPTIONS:");
         println();
