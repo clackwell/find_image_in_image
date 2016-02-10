@@ -240,6 +240,9 @@ public class FindImageInImage {
         println( " 0 : Sub-image has been found" );
         println( " 1 : Sub-image has not been found" );
         println( " 2 : Error in parameters" );
+        println( " 3 : Cannot read one of the image files" );
+        println( " 4 : Sub-image width larger than width of image" );
+        println( " 5 : Sub-image height larger than height of image" );
         println();
     }
 

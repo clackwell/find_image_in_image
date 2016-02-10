@@ -39,3 +39,6 @@ Intended use is for GUI automation.
      0 : Sub-image has been found
      1 : Sub-image has not been found
      2 : Error in parameters
+     3 : Cannot read one of the image files
+     4 : Sub-image width larger than width of image
+     5 : Sub-image height larger than height of image
