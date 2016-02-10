@@ -26,13 +26,13 @@ Intended use is for GUI automation.
     
     OPTIONS:
     
-      --allowed-pixel-color-difference
-        Allowed pixel color difference.
-        An integer value.
+     --allowed-pixel-color-difference
+       Allowed pixel color difference.
+       An integer value.
     
-      --allowed-pixel-fails-percent
-        Allowed percentage of pixel color mismatches.
-        An integer or floating point value.
+     --allowed-pixel-fails-percent
+       Allowed percentage of pixel color mismatches.
+       An integer or floating point value.
     
     EXIT CODES:
     
