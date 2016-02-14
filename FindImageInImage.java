@@ -16,65 +16,18 @@ public class FindImageInImage {
     static final int EXIT_CODE_SUB_IMAGE_WIDTH_TOO_LARGE = 4;
     static final int EXIT_CODE_SUB_IMAGE_HEIGHT_TOO_LARGE = 5;
 
+    static String filename1 = null;
+    static String filename2 = null;
+    static int allowedPixelColorDifference = 0;
+    static double allowedPixelFailsPercent = 0.0;
+
     public static void main( String[] args ) throws Exception {
         if ( args.length == 0 ) {
             printUsage();
             System.exit( 0 );
         }
 
-        String filename1 = null;
-        String filename2 = null;
-        int allowedPixelColorDifference = 0;
-        double allowedPixelFailsPercent = 0.0;
-        int argIndex = 0;
-        while ( argIndex < args.length ) {
-            String arg = args[ argIndex ];
-            if ( arg.equals( "--help" ) ) {
-                printUsage();
-                System.exit( 0 );
-            } else if ( arg.equals( "--version" ) ) {
-                printVersion();
-                System.exit( 0 );
-            } else if ( arg.equals( "--allowed-pixel-color-difference" ) ) {
-                if ( argIndex == args.length -1 ) {
-                    println( "ERROR: Missing value for parameter: " + arg );
-                    System.exit( EXIT_CODE_INVALID_ARGUMENTS );
-                }
-                try {
-                    argIndex++;
-                    allowedPixelColorDifference = Integer.parseInt( args[ argIndex ] );
-                } catch ( Exception e ) {
-                    println( "ERROR: Invalid value for parameter: " + arg );
-                    println();
-                    printUsage();
-                    System.exit( EXIT_CODE_INVALID_ARGUMENTS );
-                }
-            } else if ( arg.equals( "--allowed-pixel-fails-percent" ) ) {
-                if ( argIndex == args.length -1 ) {
-                    println( "ERROR: Missing value for parameter: " + arg );
-                    System.exit( EXIT_CODE_INVALID_ARGUMENTS );
-                }
-                try {
-                    argIndex++;
-                    allowedPixelFailsPercent = Double.parseDouble( args[ argIndex ] );
-                } catch ( Exception e ) {
-                    println( "ERROR: Invalid value for parameter: " + arg );
-                    printUsage();
-                    System.exit( EXIT_CODE_INVALID_ARGUMENTS);
-                }
-            } else if ( filename1 == null ) {
-                filename1 = arg;
-            } else if ( filename2 == null ) {
-                filename2 = arg;
-            } else {
-                println( "ERROR: Invalid argument: " + arg );
-                println();
-                printUsage();
-                System.exit( EXIT_CODE_INVALID_ARGUMENTS );
-            }
-            argIndex++;
-        }
-
+        handleArgs(args);
         BufferedImage subImage = readImage( filename1 );
         BufferedImage img = null;
         if ( filename2 == null ) {
@@ -83,26 +36,17 @@ public class FindImageInImage {
             img = readImage( filename2 );
         }
 
-        int width = img.getWidth();
-        int subWidth = subImage.getWidth();
-        int height = img.getHeight();
-        int subHeight = subImage.getHeight();
-
-        if ( subWidth > width ) {
+        if ( subImage.getWidth() > img.getWidth() ) {
             println( "ERROR: Sub image width is larger than image width." );
             System.exit( EXIT_CODE_SUB_IMAGE_WIDTH_TOO_LARGE );
-        } else if ( subHeight > height ) {
+        } else if ( subImage.getHeight() > img.getHeight() ) {
             println( "ERROR: Sub image height is larger than image height." );
             System.exit( EXIT_CODE_SUB_IMAGE_HEIGHT_TOO_LARGE );
         }
 
         if ( findSubImage(
                 subImage,
-                subWidth,
-                subHeight,
                 img,
-                width,
-                height,
                 allowedPixelFailsPercent,
                 allowedPixelColorDifference ) ) {
             System.exit( EXIT_CODE_IMAGE_FOUND );
@@ -113,14 +57,15 @@ public class FindImageInImage {
 
     static boolean findSubImage(
             BufferedImage subImage,
-            int subWidth,
-            int subHeight,
             BufferedImage img,
-            int width,
-            int height,
             double allowedPixelFailsPercent,
             int allowedPixelColorDifference ) {
+        int subWidth = subImage.getWidth();
+        int subHeight = subImage.getHeight();
         println( "SUB_IMAGE_TOTAL_PIXELS=" + subWidth * subHeight );
+
+        int width = img.getWidth();
+        int height = img.getHeight();
         println( "IMAGE_TOTAL_PIXELS=" + width * height );
         int allowedPixelFailsCount = (int)( ( (double)( subWidth * subHeight) / 100.0 ) * allowedPixelFailsPercent );
         println( "ALLOWED_PIXEL_FAILS_COUNT=" + allowedPixelFailsCount );
@@ -251,6 +196,57 @@ public class FindImageInImage {
         println( " 4 : Sub-image width larger than width of image" );
         println( " 5 : Sub-image height larger than height of image" );
         println();
+    }
+
+    static void handleArgs(String[] args) {
+        int argIndex = 0;
+        while ( argIndex < args.length ) {
+            String arg = args[ argIndex ];
+            if ( arg.equals( "--help" ) ) {
+                printUsage();
+                System.exit( 0 );
+            } else if ( arg.equals( "--version" ) ) {
+                printVersion();
+                System.exit( 0 );
+            } else if ( arg.equals( "--allowed-pixel-color-difference" ) ) {
+                if ( argIndex == args.length -1 ) {
+                    println( "ERROR: Missing value for parameter: " + arg );
+                    System.exit( EXIT_CODE_INVALID_ARGUMENTS );
+                }
+                try {
+                    argIndex++;
+                    allowedPixelColorDifference = Integer.parseInt( args[ argIndex ] );
+                } catch ( Exception e ) {
+                    println( "ERROR: Invalid value for parameter: " + arg );
+                    println();
+                    printUsage();
+                    System.exit( EXIT_CODE_INVALID_ARGUMENTS );
+                }
+            } else if ( arg.equals( "--allowed-pixel-fails-percent" ) ) {
+                if ( argIndex == args.length -1 ) {
+                    println( "ERROR: Missing value for parameter: " + arg );
+                    System.exit( EXIT_CODE_INVALID_ARGUMENTS );
+                }
+                try {
+                    argIndex++;
+                    allowedPixelFailsPercent = Double.parseDouble( args[ argIndex ] );
+                } catch ( Exception e ) {
+                    println( "ERROR: Invalid value for parameter: " + arg );
+                    printUsage();
+                    System.exit( EXIT_CODE_INVALID_ARGUMENTS);
+                }
+            } else if ( filename1 == null ) {
+                filename1 = arg;
+            } else if ( filename2 == null ) {
+                filename2 = arg;
+            } else {
+                println( "ERROR: Invalid argument: " + arg );
+                println();
+                printUsage();
+                System.exit( EXIT_CODE_INVALID_ARGUMENTS );
+            }
+            argIndex++;
+        }
     }
 
     static BufferedImage readImage( String filename ) {
